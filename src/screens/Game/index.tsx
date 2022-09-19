@@ -5,19 +5,28 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Entypo } from "@expo/vector-icons";
 
 import { GameParams } from "../../@types/navigation";
-import { Background } from "../../components/Background";
 import { styles } from "./styles";
 import { THEME } from "../../theme";
 import logoImg from "../../assets/logo-nlw-esports.png";
+
+import { Background } from "../../components/Background";
 import { Heading } from "../../components/Heading";
 import { AdCard, AdCardProps } from "../../components/AdCard";
+import { DuoMatch } from "../../components/DuoMatch";
 
 export function Game() {
   const [ads, setAds] = useState<AdCardProps[]>([]);
+  const [duoDiscord, setDuoDiscord] = useState("");
   const navigation = useNavigation();
   const route = useRoute();
 
   const game = route.params as GameParams;
+
+  async function getDiscordUser(adId: string) {
+    fetch(`http://192.168.18.29:3333/ads/${adId}/discord`)
+      .then((response) => response.json())
+      .then(({ discord }) => setDuoDiscord(discord));
+  }
 
   function handleGoBack() {
     navigation.goBack();
@@ -56,7 +65,9 @@ export function Game() {
         <FlatList
           data={ads}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <AdCard data={item} onConnect={() => {}} />}
+          renderItem={({ item }) => (
+            <AdCard data={item} onConnect={() => getDiscordUser(item.id)} />
+          )}
           horizontal
           style={styles.containerList}
           contentContainerStyle={
@@ -68,6 +79,12 @@ export function Game() {
               Não há anúncios para este jogo.
             </Text>
           )}
+        />
+
+        <DuoMatch
+          visible={duoDiscord.length > 0}
+          discord={duoDiscord}
+          onClose={() => setDuoDiscord("")}
         />
       </SafeAreaView>
     </Background>
